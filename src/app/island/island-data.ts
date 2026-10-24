@@ -413,6 +413,20 @@ export const ISLAND = {
           "h": 23
         }
       ]
+    },
+    {
+      "id": "luis",
+      "ax": 422,
+      "ay": 376,
+      "views": [
+        {
+          "src": "island/sprites/luis.png",
+          "dx": -15,
+          "dy": -47,
+          "w": 30,
+          "h": 48
+        }
+      ]
     }
   ]
 } as const;
