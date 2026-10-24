@@ -161,7 +161,7 @@ El `.piskel` es JSON: `{ modelVersion: 2, piskel: { width, height, layers: [...]
 un texto JSON con `chunks: [{ layout: [[0]], base64PNG: "data:image/png;base64,..." }]`. Se verificó importándolo en
 piskelapp.com (*Import → Browse .piskel files → Replace*).
 
-**Comando**: `node art/render3.js` (desde la raíz o desde `art/`).
+**Comando**: `cd art && node render3.js`. Ejecútalo **dentro de `art/`**: las salidas 3D usan rutas relativas al script, pero las imágenes planas se escriben en la carpeta actual, así que desde la raíz ensuciarían el repo.
 
 ---
 
@@ -404,7 +404,7 @@ Con Playwright (navegador automatizado) contra `ng serve`:
 
 1. En `art/render3.js`, sección *place everything*, agrega `sprite('<id>', <vista o 4 vistas>, [x, y])` con su ancla
    en coordenadas del mapa (480×320). Si necesita un claro de pasto, agrégalo a `CLEARINGS`.
-2. Corre `node art/render3.js` (regenera `public/island/` e `island-data.ts`).
+2. Corre `cd art && node render3.js` (regenera `public/island/` e `island-data.ts`).
 3. En `src/app/island/landmarks.ts`, agrega `{ id: '<id>', name, place, about, url }` a `LANDMARKS` (y quítalo de
    `EXTRA_LINKS` si estaba ahí).
 4. `npm start`, prueba girar, clic, YES.

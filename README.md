@@ -22,7 +22,7 @@ Live: https://panter15.github.io/
 ```bash
 npm install
 npm start                # http://localhost:4200
-node art/render3.js      # regenerate the art after changing it
+cd art && node render3.js   # regenerate the art (run inside art/)
 ```
 
 Step-by-step build guide (Spanish), with the reasons behind every decision: [docs/GUIA.md](docs/GUIA.md).
