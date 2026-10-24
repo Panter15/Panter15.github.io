@@ -25,4 +25,6 @@ npm start                # http://localhost:4200
 node art/render3.js      # regenerate the art after changing it
 ```
 
+Step-by-step build guide (Spanish), with the reasons behind every decision: [docs/GUIA.md](docs/GUIA.md).
+
 Deployed to GitHub Pages by `.github/workflows/deploy.yml` on every push to `main`.
