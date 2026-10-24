@@ -11,12 +11,12 @@ export const ISLAND = {
     {
       "id": "malinche",
       "ax": 400,
-      "ay": 311,
+      "ay": 320,
       "views": [
         {
           "src": "island/sprites/malinche.png",
           "dx": -104,
-          "dy": -95,
+          "dy": -104,
           "w": 208,
           "h": 96
         }

@@ -131,8 +131,10 @@ const volcano = (opts, w) => () => {
   drawMalinche(px, ox, 70, w, 104, opts);
   forestCanopy();
 };
-// one view only: La Malinche keeps its recognisable front profile from every angle (the user's choice)
-sprite('malinche', volcano({}, 208), [240, 173]);
+// one view only: La Malinche keeps its recognisable front profile from every angle (the user's choice).
+// Anchored on the island centre (CX, CY), the point the island turns around, so it stays perfectly still on screen
+// instead of circling that point and growing/shrinking with depth while the island turns.
+sprite('malinche', volcano({}, 208), [CX, CY]);
 // repaint the volcano's forest with the same loose canopy as the island (clipped to the forest pixels)
 function forestCanopy() {
   const FOREST = new Set(['#2f6a3a', '#1f4a2a', '#46924e']);
