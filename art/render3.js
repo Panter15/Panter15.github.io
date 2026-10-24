@@ -20,9 +20,6 @@ function get(x, y) {                                   // colour of the top-most
   return '#000000';
 }
 function onGround(fn) { const prev = target; target = layers[0]; fn(); target = prev; }
-// erase / test pixels of the layer being drawn (used to cut a soft edge into a sprite)
-function erase(x, y) { x = (x | 0) + OX; y = (y | 0) + OY; if (x < 0 || y < 0 || x >= CW || y >= CH) return; (target || layers.at(-1)).buf[(y * CW + x) * 4 + 3] = 0; }
-function painted(x, y) { x = (x | 0) + OX; y = (y | 0) + OY; return x >= 0 && y >= 0 && x < CW && y < CH && (target || layers.at(-1)).buf[(y * CW + x) * 4 + 3] > 0; }
 // Each object is drawn into its own temporary layer, saved as cropped sprites (for the 3D billboards), and its front
 // view is merged into the current layer (for the flat image). Shadows inside a view go to the ground via onGround().
 // views: one draw function (looks the same from every side) or four: [front, east, back, west], i.e. the side the
@@ -112,18 +109,6 @@ for (let y = 40; y < H; y += 4) for (let x = 0; x < W; x += 4) {
   disc(jx + 1, jy - 1, r - 2, r - 2, tone > 0.7 ? CANOPY.high : CANOPY.light);
   if (r > 4) px(jx + 2, jy - 2, CANOPY.high);
 }
-// La Malinche's forested foot: a round patch of the volcano's darker forest on the ground under it. Round, so it
-// looks the same from every angle while the island turns under the (still) volcano, and the volcano's lower
-// forest blends into it instead of ending in a straight edge.
-const FOOT_R = 96;
-for (let y = CY - FOOT_R; y <= CY + FOOT_R; y += 3) for (let x = CX - FOOT_R; x <= CX + FOOT_R; x += 3) {
-  const jx = x + ((hash(x, y + 21) * 3) | 0) - 1, jy = y + ((hash(y + 21, x) * 3) | 0) - 1;
-  if (Math.hypot(jx - CX, jy - CY) / FOOT_R > 1 - hash(jx, jy) * 0.15 || inClearing(jx, jy) || shape(jx, jy) > 0.9) continue;
-  const r = 2 + ((hash(jx + 3, jy) * 2) | 0), lit = jx > CX;
-  disc(jx - 1, jy + 1, r, r, '#183c1c');
-  disc(jx, jy, r, r - 1, lit ? '#2f6e34' : '#24562a');
-  disc(jx + 1, jy - 1, r - 1, r - 1, lit ? '#4c8f42' : '#346e34');
-}
 
 // ---- dirt paths meeting at a plaza in front of the volcano
 function path(points, w = 8) {
@@ -142,21 +127,9 @@ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (((x - 226) / 110) **
 layer('Malinche');
 // drawMalinche also has side/mirror profiles (east/west/back views) if the volcano should ever turn
 const volcano = (opts, w) => () => {
-  const ox = 240 - w / 2, oy = 70, h = 104, bottom = oy + h - 1;
-  drawMalinche(px, ox, oy, w, h, opts);
+  const ox = 240 - w / 2;
+  drawMalinche(px, ox, 70, w, 104, opts);
   forestCanopy();
-  // soften the edges where the volcano meets the forest: a treetop-shaped bottom edge, and treetop bumps along the
-  // lower slopes, instead of straight cut-out lines
-  for (let x = ox; x < ox + w; x++) {
-    const cut = 2 + Math.round(2 * (1 + Math.sin(x * 0.55)) + 2 * hash(x, 7));
-    for (let y = bottom - cut + 1; y <= bottom; y++) erase(x, y);
-    let top = oy; while (top < bottom && !painted(x, top)) top++;
-    if (top > oy + h * 0.5) {
-      const bump = Math.round(1 + (1 + Math.sin(x * 0.9)) + 2 * hash(x, 11));
-      for (let y = top; y < top + bump; y++) erase(x, y);
-      px(x, top + bump, '#183c1c');                                            // dark crown edge, like the canopy
-    }
-  }
 };
 // one view only: La Malinche keeps its recognisable front profile from every angle (the user's choice).
 // Anchored on the island centre (CX, CY), the point the island turns around, so it stays perfectly still on screen
