@@ -125,16 +125,19 @@ function path(points, w = 8) {
 // ---- La Malinche (with a soft shadow on the grass, cast to the bottom-left; the shadow stays on the ground)
 for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (((x - 226) / 110) ** 2 + ((y - 168) / 16) ** 2 <= 1 && (get(x, y) === P.grass || get(x, y) === P.grassL)) px(x, y, P.grassS);
 layer('Malinche');
-// drawMalinche also has side/mirror profiles (east/west/back views) if the volcano should ever turn
+// drawMalinche has front, side, back and opposite-side profiles for the rotating view.
 const volcano = (opts, w) => () => {
   const ox = 240 - w / 2;
   drawMalinche(px, ox, 70, w, 104, opts);
   forestCanopy();
 };
-// one view only: La Malinche keeps its recognisable front profile from every angle (the user's choice).
-// Anchored on the island centre (CX, CY), the point the island turns around, so it stays perfectly still on screen
-// instead of circling that point and growing/shrinking with depth while the island turns.
-sprite('malinche', volcano({}, 208), [CX, CY]);
+// Keep the mountain anchored at the island's rotation centre while showing the profile facing the camera.
+sprite('malinche', [
+  volcano({}, 208),
+  volcano({ side: true }, 160),
+  volcano({ mirror: true }, 208),
+  volcano({ side: true, mirror: true }, 160),
+], [CX, CY]);
 // repaint the volcano's forest with the same loose canopy as the island (clipped to the forest pixels)
 function forestCanopy() {
   const FOREST = new Set(['#2f6a3a', '#1f4a2a', '#46924e']);
@@ -256,7 +259,7 @@ for (const [x, y] of [[60, 236], [74, 252], [416, 240], [300, 272], [136, 270], 
 sprite('lighthouse', () => lighthouse(400, 226));                                     // lighthouse (LinkedIn)
 n = 0;
 for (const [x, y] of [[50, 210], [196, 292], [284, 294], [36, 182]]) sprite(`palm-${n++}`, () => palm(x, y));
-sprite('boat', [0, 1, 2, 3].map(v => () => boat(150, 44, v)), [159, 48]);
+sprite('boat', [0, 1, 2, 3].map(v => () => boat(22, 143, v)), [31, 147]);
 
 // ---- sun and clouds
 layer('Sky');

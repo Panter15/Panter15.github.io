@@ -14,11 +14,32 @@ export const ISLAND = {
       "ay": 320,
       "views": [
         {
-          "src": "island/sprites/malinche.png",
+          "src": "island/sprites/malinche-0.png",
           "dx": -104,
           "dy": -104,
           "w": 208,
           "h": 96
+        },
+        {
+          "src": "island/sprites/malinche-1.png",
+          "dx": -80,
+          "dy": -105,
+          "w": 160,
+          "h": 97
+        },
+        {
+          "src": "island/sprites/malinche-2.png",
+          "dx": -104,
+          "dy": -104,
+          "w": 208,
+          "h": 96
+        },
+        {
+          "src": "island/sprites/malinche-3.png",
+          "dx": -80,
+          "dy": -105,
+          "w": 160,
+          "h": 97
         }
       ]
     },
@@ -360,8 +381,8 @@ export const ISLAND = {
     },
     {
       "id": "boat",
-      "ax": 319,
-      "ay": 186,
+      "ax": 191,
+      "ay": 285,
       "views": [
         {
           "src": "island/sprites/boat-0.png",
