@@ -1,0 +1,10 @@
+:root {
+  --ink: #202820;
+  --paper: #f8f8f0;
+  --frame: #7898c8;
+  --accent: #d83838;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: #1c4890; }
+body { font-family: 'Press Start 2P', monospace; color: var(--ink); }

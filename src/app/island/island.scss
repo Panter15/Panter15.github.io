@@ -1,0 +1,54 @@
+:host { display: block; position: fixed; inset: 0; }
+
+.scene {
+  position: absolute; inset: 0; overflow: hidden; touch-action: none; user-select: none; cursor: grab;
+  perspective: 900px; perspective-origin: 50% 30%;
+  background: linear-gradient(#5aa8ec, #b8e2ff 60%);   // sky; the round sea covers it below the horizon
+}
+
+.world {
+  position: absolute; left: 50%; top: 62%; width: 0; height: 0;
+  transform-origin: 0 0; transform-style: preserve-3d;
+}
+
+img { image-rendering: pixelated; -webkit-user-drag: none; }
+.ground { position: absolute; left: 0; top: 0; display: block; }
+// a round sea under the ground image: its corners never show while the island turns, and its far edge
+// draws a curved horizon against the sky
+.open-sea { position: absolute; border-radius: 50%; background: #1c4890; }
+
+// Objects stand up: undo the world's turn and tilt around their bottom-centre.
+.billboard {
+  position: absolute; display: block;   // transform-origin = the ground anchor, set per sprite
+  transform: rotateZ(calc(-1 * var(--rot))) rotateX(calc(-1 * var(--tilt)));
+}
+
+.landmark {
+  padding: 0; border: 0; background: none; cursor: pointer;
+  img { width: 100%; height: 100%; display: block; }
+  .tag {
+    position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -6px); white-space: nowrap;
+    background: var(--paper); border: 3px solid var(--ink); padding: 6px 8px; font-size: 10px;
+    opacity: 0; transition: opacity .15s; pointer-events: none;
+  }
+  &:hover .tag, &:focus-visible .tag { opacity: 1; }
+  &:focus-visible { outline: 3px dashed var(--paper); outline-offset: 3px; }
+}
+
+.side {
+  position: fixed; top: 50%; transform: translateY(-50%); z-index: 1;
+  width: 56px; height: 72px; font: inherit; font-size: 20px; color: var(--ink); cursor: pointer;
+  background: var(--paper); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  &.left { left: 12px; } &.right { right: 12px; }
+  &:active { transform: translateY(-50%) translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+}
+
+.hint {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); margin: 0; text-align: center;
+  font-size: 11px; color: var(--paper); text-shadow: 2px 2px 0 var(--ink); pointer-events: none;
+  animation: blink 1.2s steps(2) infinite; transition: opacity .4s;
+  &.gone { opacity: 0; animation: none; }
+}
+@keyframes blink { 50% { opacity: .35; } }
+
+@media (prefers-reduced-motion: reduce) { .hint { animation: none; } }

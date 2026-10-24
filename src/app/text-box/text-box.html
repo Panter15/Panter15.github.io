@@ -1,0 +1,12 @@
+<div class="box" role="dialog" aria-modal="true" aria-labelledby="box-title">
+  <ul class="choices" role="listbox" aria-label="Go there?">
+    @for (label of ['YES', 'NO']; track label; let i = $index) {
+      <li>
+        <button #option type="button" role="option" [attr.aria-selected]="choice() === i"
+                (click)="pick(i)" (focus)="choice.set(i)">{{ label }}</button>
+      </li>
+    }
+  </ul>
+  <h2 id="box-title">{{ landmark().name }}</h2>
+  <p>{{ typed() }}</p>
+</div>

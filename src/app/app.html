@@ -1,0 +1,16 @@
+<app-island [locked]="!!selected() || classic()" (selected)="selected.set($event)" />
+
+@if (selected(); as l) {
+  <app-text-box [landmark]="l" (confirmed)="open()" (cancelled)="close()" />
+}
+
+@if (classic()) {
+  <app-classic-view />
+}
+
+<header>
+  <span class="chip name">LUIS PORTILLA</span>
+  <button type="button" class="chip" [attr.aria-expanded]="classic()" (click)="classic.set(!classic())">
+    {{ classic() ? 'ISLAND VIEW' : 'CLASSIC VIEW' }}
+  </button>
+</header>
