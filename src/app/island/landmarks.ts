@@ -1,5 +1,4 @@
-// Buildings that link somewhere. `id` matches a sprite id in island-data.ts.
-// Rule: one building per deployed project, plus the GitHub library and the LinkedIn lighthouse.
+// Places that link somewhere. `id` matches a sprite id in island-data.ts.
 export interface Landmark {
   id: string;
   name: string;
@@ -30,12 +29,10 @@ export const LANDMARKS: Landmark[] = [
     about: 'Experience and contact.',
     url: 'https://www.linkedin.com/in/luis-portilla',
   },
-];
-
-// Deployed work that has no building yet (Danza Folclor gets the caimán statue later).
-export const EXTRA_LINKS: Omit<Landmark, 'id' | 'place'>[] = [
   {
+    id: 'boat',
     name: 'DANZA FOLCLOR',
+    place: 'the boat',
     about: 'Bilingual animated site for a Colombian folk dance group (Next.js, GSAP).',
     url: 'https://panter15.github.io/danza-folclor/',
   },

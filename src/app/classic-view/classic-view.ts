@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { EXTRA_LINKS, LANDMARKS } from '../island/landmarks';
+import { LANDMARKS } from '../island/landmarks';
 
 // The same links as a plain list: for recruiters in a hurry, screen readers and slow phones.
 @Component({
@@ -23,5 +23,5 @@ import { EXTRA_LINKS, LANDMARKS } from '../island/landmarks';
   `,
 })
 export class ClassicView {
-  protected readonly links = [...LANDMARKS, ...EXTRA_LINKS];
+  protected readonly links = LANDMARKS;
 }

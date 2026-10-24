@@ -1,7 +1,7 @@
 :host { display: block; position: fixed; inset: 0; }
 
 .scene {
-  position: absolute; inset: 0; overflow: hidden; touch-action: none; user-select: none; cursor: grab;
+  position: absolute; inset: 0; overflow: hidden; user-select: none;
   perspective: 900px; perspective-origin: 50% 30%;
   background: linear-gradient(#5aa8ec, #b8e2ff 60%);   // sky; the round sea covers it below the horizon
 }
@@ -11,16 +11,24 @@
   transform-origin: 0 0; transform-style: preserve-3d;
 }
 
+.terrain-world { z-index: 0; }
+.mountain-world { z-index: 1; }
+.objects-world { z-index: 2; }
+
 img { image-rendering: pixelated; -webkit-user-drag: none; }
 .ground { position: absolute; left: 0; top: 0; display: block; }
-// a round sea under the ground image: its corners never show while the island turns, and its far edge
-// draws a curved horizon against the sky
+// a round sea under the ground image, with its far edge drawing a curved horizon against the sky
 .open-sea { position: absolute; border-radius: 50%; background: #1c4890; }
 
-// Objects stand up: undo the world's turn and tilt around their bottom-centre.
+// Sprites keep facing the camera; multi-view sprites swap to the profile for the current island angle.
 .billboard {
   position: absolute; display: block;   // transform-origin = the ground anchor, set per sprite
-  transform: rotateZ(calc(-1 * var(--rot))) rotateX(calc(-1 * var(--tilt)));
+  transform: rotateX(calc(-1 * var(--tilt)));
+}
+
+.mountain-sprite {
+  position: absolute; display: block;
+  transform: rotateX(calc(-1 * var(--tilt)));
 }
 
 .landmark {
@@ -33,14 +41,15 @@ img { image-rendering: pixelated; -webkit-user-drag: none; }
   }
   &:hover .tag, &:focus-visible .tag { opacity: 1; }
   &:focus-visible { outline: 3px dashed var(--paper); outline-offset: 3px; }
+  &.boat-link {
+    .tag { font-size: 11px; }
+    img { transform-origin: 50% 100%; animation: boat-pulse 5s ease-in-out 1; }
+  }
 }
 
-.side {
-  position: fixed; top: 50%; transform: translateY(-50%); z-index: 1;
-  width: 56px; height: 72px; font: inherit; font-size: 20px; color: var(--ink); cursor: pointer;
-  background: var(--paper); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
-  &.left { left: 12px; } &.right { right: 12px; }
-  &:active { transform: translateY(-50%) translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+@keyframes boat-pulse {
+  0%, 100% { transform: scale(.92) translateY(0); }
+  50% { transform: scale(1.16) translateY(-2px); }
 }
 
 .hint {
@@ -51,4 +60,6 @@ img { image-rendering: pixelated; -webkit-user-drag: none; }
 }
 @keyframes blink { 50% { opacity: .35; } }
 
-@media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .landmark.boat-link img { animation: none; }
+}

@@ -1,15 +1,24 @@
-<div class="scene" (pointerdown)="onPointerDown($event)" (wheel)="onWheel($event)"
-     aria-label="Luis's island. Use the side arrows or the arrow keys to turn it, and pick a building.">
-  <div class="world" [style.transform]="worldTransform()" [style.--rot]="rot() + 'deg'" [style.--tilt]="tilt + 'deg'">
+<div class="scene" aria-label="Luis's island. Select a building to zoom in.">
+  <div class="world terrain-world" [style.transform]="worldTransform()">
     <div class="open-sea" aria-hidden="true"
          [style.left.px]="ground.centerX * scale() - seaRadius()" [style.top.px]="ground.centerY * scale() - seaRadius()"
          [style.width.px]="seaRadius() * 2" [style.height.px]="seaRadius() * 2"></div>
     <img class="ground" [src]="ground.src" alt=""
          [style.width.px]="ground.w * scale()" [style.height.px]="ground.h * scale()" draggable="false">
+  </div>
 
+  <div class="world mountain-world" [style.transform]="mountainTransform()" [style.--tilt]="tilt + 'deg'">
+    @if (mountain(); as m) {
+      <img class="mountain-sprite" [src]="m.src" alt="" draggable="false"
+           [style.left.px]="m.left" [style.top.px]="m.top" [style.width.px]="m.w" [style.height.px]="m.h"
+           [style.transform-origin]="m.origin">
+    }
+  </div>
+
+  <div class="world objects-world" [style.transform]="worldTransform()" [style.--tilt]="tilt + 'deg'">
     @for (s of sprites(); track s.id) {
       @if (s.landmark; as l) {
-        <button type="button" class="billboard landmark"
+        <button type="button" class="billboard landmark" [class.boat-link]="s.id === 'boat'"
                 [style.left.px]="s.left" [style.top.px]="s.top" [style.width.px]="s.w" [style.height.px]="s.h" [style.transform-origin]="s.origin"
                 [attr.aria-label]="l.name + ': ' + l.place" (click)="pick(s)">
           <img [src]="s.src" alt="" draggable="false">
@@ -23,7 +32,4 @@
   </div>
 </div>
 
-<button type="button" class="side left" (click)="turn(1)" aria-label="Turn the island left">◀</button>
-<button type="button" class="side right" (click)="turn(-1)" aria-label="Turn the island right">▶</button>
-
-<p class="hint" [class.gone]="hintGone()" aria-hidden="true">CLICK THE SIDES OR DRAG TO TURN</p>
+<p class="hint" [class.gone]="hintGone()" aria-hidden="true">CLICK A HOUSE TO ZOOM</p>
