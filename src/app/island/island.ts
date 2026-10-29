@@ -203,7 +203,9 @@ export class Island implements OnDestroy {
   }
 
   private roam(dt: number): void {
+    let changed = false;
     for (const c of this.herd) {
+      if (c.moving) changed = true;   // stopping also needs a redraw (back to idle frames)
       c.moving = false;
       if (c.wait > 0) { c.wait -= dt * 1000; continue; }
       if (!c.path.length) {
@@ -218,11 +220,11 @@ export class Island implements OnDestroy {
       const p = c.path[0], dx = p.x - c.fx, dy = p.y - c.fy, len = Math.hypot(dx, dy), step = (c.speed ?? 18) * dt;
       const nx = len <= step ? p.x : c.fx + dx / len * step, ny = len <= step ? p.y : c.fy + dy / len * step;
       if (this.bumps(nx, ny, { x: c.fx, y: c.fy }, c)) { c.path = []; c.moving = false; c.wait = 600 + Math.random() * 900; continue; }
-      c.fx = nx; c.fy = ny;
+      c.fx = nx; c.fy = ny; changed = true;
       if (len <= step) { c.path.shift(); if (!c.path.length) c.wait = 1500 + Math.random() * 3500; }
       if (Math.abs(dx) > .5) c.flip = (dx < 0) === (c.right ?? true);   // face the way it walks
     }
-    this.critters.set([...this.herd]);
+    if (changed) this.critters.set([...this.herd]);   // only redraw the page when an animal moved
   }
 
   ngOnDestroy(): void { clearTimeout(this.bubbleTimer); this.introTween.kill(); cancelAnimationFrame(this.raf); this.resizer.disconnect(); }

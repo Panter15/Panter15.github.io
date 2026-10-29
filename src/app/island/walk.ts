@@ -28,8 +28,8 @@ export function route(from: { x: number; y: number }, to: { x: number; y: number
   const sx = Math.floor(from.x / T), sy = Math.floor(from.y / T), gx = Math.floor(to.x / T), gy = Math.floor(to.y / T);
   if (!free(gx, gy)) return [];
   const cols = TOWN.blocked[0].length, start = sy * cols + sx, prev = new Map<number, number>([[start, -1]]), queue = [start];
-  while (queue.length) {
-    const k = queue.shift()!, x = k % cols, y = (k - x) / cols;
+  for (let head = 0; head < queue.length; head++) {   // read by index: shift() would copy the queue every step
+    const k = queue[head], x = k % cols, y = (k - x) / cols;
     if (x === gx && y === gy) {   // walk back from the goal, through tile centres, to (not including) the start tile
       const path: { x: number; y: number }[] = [to];
       for (let p = prev.get(k)!; p !== -1 && p !== start; p = prev.get(p)!) path.unshift({ x: (p % cols) * T + T / 2, y: Math.floor(p / cols) * T + T / 2 });
