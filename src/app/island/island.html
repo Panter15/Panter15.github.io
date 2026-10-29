@@ -1,10 +1,15 @@
-<div class="scene" aria-label="Luis's island. Select a building to zoom in.">
+<div class="scene" aria-label="Luis's island. Walk with the arrow keys or the on-screen arrows, or select a building.">
   <div class="world terrain-world" [style.transform]="worldTransform()">
     <div class="open-sea" aria-hidden="true"
          [style.left.px]="ground.centerX * scale() - seaRadius()" [style.top.px]="ground.centerY * scale() - seaRadius()"
          [style.width.px]="seaRadius() * 2" [style.height.px]="seaRadius() * 2"></div>
-    <img class="ground" [src]="ground.src" alt=""
+    <img class="ground" [src]="ground.src" alt="" (click)="walkTo($event)"
          [style.width.px]="ground.w * scale()" [style.height.px]="ground.h * scale()" draggable="false">
+  </div>
+
+  <!-- Luis walks in this layer while he is behind La Malinche, so the mountain is drawn over him -->
+  <div class="world behind-world" [style.transform]="worldTransform()" [style.--tilt]="tilt + 'deg'">
+    @if (luis().behind) { <ng-container *ngTemplateOutlet="luisTpl" /> }
   </div>
 
   <div class="world mountain-world" [style.transform]="mountainTransform()" [style.--tilt]="tilt + 'deg'">
@@ -29,7 +34,16 @@
              [style.left.px]="s.left" [style.top.px]="s.top" [style.width.px]="s.w" [style.height.px]="s.h" [style.transform-origin]="s.origin">
       }
     }
+    @if (!luis().behind) { <ng-container *ngTemplateOutlet="luisTpl" /> }
   </div>
 </div>
 
-<p class="hint" [class.gone]="hintGone()" aria-hidden="true">CLICK A HOUSE TO ZOOM</p>
+<ng-template #luisTpl>
+  @let me = luis();
+  <div class="luis-shadow" [style.left.px]="me.x" [style.top.px]="me.y"
+       [style.width.px]="12 * scale()" [style.height.px]="4 * scale()"></div>
+  <img class="billboard" [class.flip]="me.flip" [src]="me.src" alt="Luis" draggable="false"
+       [style.left.px]="me.left" [style.top.px]="me.top" [style.width.px]="me.w" [style.height.px]="me.h" [style.transform-origin]="me.origin">
+</ng-template>
+
+<p class="hint" [class.gone]="hintGone()" aria-hidden="true">WALK TO AN OBJECT</p>

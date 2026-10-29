@@ -35,9 +35,14 @@ export class TextBox implements OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   protected onKey(e: KeyboardEvent): void {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); this.choice.update(c => 1 - c); }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); this.move(); }
     if (e.key === 'Escape') this.cancelled.emit();
   }
+
+  /** D-pad up/down. */
+  move(): void { this.choice.update(c => 1 - c); }
+  /** The A button: pick the option under ▶. */
+  accept(): void { this.pick(this.choice()); }
 
   protected pick(i: number): void { i === 0 ? this.confirmed.emit() : this.cancelled.emit(); }
 

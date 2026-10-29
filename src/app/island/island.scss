@@ -12,8 +12,9 @@
 }
 
 .terrain-world { z-index: 0; }
-.mountain-world { z-index: 1; }
-.objects-world { z-index: 2; }
+.behind-world { z-index: 1; }
+.mountain-world { z-index: 2; }
+.objects-world { z-index: 3; }
 
 img { image-rendering: pixelated; -webkit-user-drag: none; }
 .ground { position: absolute; left: 0; top: 0; display: block; }
@@ -43,7 +44,7 @@ img { image-rendering: pixelated; -webkit-user-drag: none; }
   &:focus-visible { outline: 3px dashed var(--paper); outline-offset: 3px; }
   &.boat-link {
     .tag { font-size: 11px; }
-    img { transform-origin: 50% 100%; animation: boat-pulse 5s ease-in-out 1; }
+    img { transform-origin: 50% 100%; animation: boat-pulse 5s ease-in-out infinite; }
   }
 }
 
@@ -53,7 +54,7 @@ img { image-rendering: pixelated; -webkit-user-drag: none; }
 }
 
 .hint {
-  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); margin: 0; text-align: center;
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); margin: 0; text-align: center; white-space: nowrap;
   font-size: 11px; color: var(--paper); text-shadow: 2px 2px 0 var(--ink); pointer-events: none;
   animation: blink 1.2s steps(2) infinite; transition: opacity .4s;
   &.gone { opacity: 0; animation: none; }
@@ -63,3 +64,11 @@ img { image-rendering: pixelated; -webkit-user-drag: none; }
 @media (prefers-reduced-motion: reduce) {
   .landmark.boat-link img { animation: none; }
 }
+
+// flat on the ground (no billboard rotation), so it lies under Luis's feet and follows him
+.luis-shadow { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(0, 0, 0, .25); pointer-events: none; }
+
+.billboard.flip { transform: rotateX(calc(-1 * var(--tilt))) scaleX(-1); }
+
+// Game Boy shell on upright phones (see app.scss): the hint sits at the bottom of the screen, not on the grey body
+@media (max-width: 600px) and (orientation: portrait) { .hint { bottom: calc(50vh - 8px); } }

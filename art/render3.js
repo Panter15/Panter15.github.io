@@ -262,7 +262,7 @@ sprite('lighthouse', () => lighthouse(400, 226));                               
 n = 0;
 for (const [x, y] of [[50, 210], [196, 292], [284, 294], [36, 182]]) sprite(`palm-${n++}`, () => palm(x, y));
 sprite('boat', [0, 1, 2, 3].map(v => () => boat(22, 143, v)), [31, 147]);
-// The avatar: copy art/luis_avatar.png (made by art/avatar.js) onto the map with its feet on LUIS_SPOT, plus a shadow.
+// The avatar: copy art/luis_mini.png (made by art/avatar.js) onto the map with its feet on LUIS_SPOT, plus a shadow.
 // That PNG is our own (RGBA, filter 0 on every row), so reading it only needs zlib.
 function readOwnPng(file) {
   const b = fs.readFileSync(file); let o = 8, w = 0, h = 0; const idat = [];
@@ -270,8 +270,8 @@ function readOwnPng(file) {
   return { w, h, raw: zlib.inflateSync(Buffer.concat(idat)) };
 }
 sprite('luis', () => {
-  const a = readOwnPng(require('path').join(__dirname, 'luis_avatar.png')), [fx, fy] = LUIS_SPOT;
-  shadow(fx, fy, 9, 2);
+  const a = readOwnPng(require('path').join(__dirname, 'luis_mini.png')), [fx, fy] = LUIS_SPOT;
+  // no baked shadow: the app draws one under Luis so it follows him when he walks
   for (let y = 0; y < a.h; y++) for (let x = 0; x < a.w; x++) {
     const i = y * (a.w * 4 + 1) + 1 + x * 4;
     if (a.raw[i + 3]) px(fx - (a.w >> 1) + x, fy - a.h + 1 + y, '#' + [a.raw[i], a.raw[i + 1], a.raw[i + 2]].map(v => v.toString(16).padStart(2, '0')).join(''));
@@ -313,6 +313,8 @@ const nodePath = require('path'), pub = nodePath.join(__dirname, '..', 'public',
 fs.rmSync(nodePath.join(pub, 'sprites'), { recursive: true, force: true });
 fs.mkdirSync(nodePath.join(pub, 'sprites'), { recursive: true });
 fs.writeFileSync(nodePath.join(pub, 'ground.png'), png(layers[0].buf, 1, 0, 0, CW, CH));
+for (const v of ['down', 'up', 'side']) for (const n of [0, 1, 2])   // walk frames from avatar.js
+  fs.copyFileSync(nodePath.join(__dirname, `luis_${v}_${n}.png`), nodePath.join(pub, 'sprites', `luis-${v}-${n}.png`));
 const data = { ground: { src: 'island/ground.png', w: CW, h: CH, centerX: OX + CX, centerY: OY + CY },
   objects: sprites.map(({ id, ax, ay, shots }) => ({ id, ax, ay, views: shots.map((s, i) => {
     const file = shots.length > 1 ? `${id}-${i}.png` : `${id}.png`;

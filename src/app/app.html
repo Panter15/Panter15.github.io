@@ -8,9 +8,40 @@
   <app-classic-view />
 }
 
-<header>
+@if (!classic()) {
+  <div class="dpad" role="group" aria-label="Move">
+    @for (d of dpad; track d) {
+      <button type="button" [class]="d" [attr.aria-label]="'Walk ' + d"
+              (pointerdown)="$event.preventDefault(); press(d)" (pointerup)="release(d)" (pointerleave)="release(d)"
+              (pointercancel)="release(d)" (contextmenu)="$event.preventDefault()"></button>
+    }
+    <span class="center" aria-hidden="true"></span>
+  </div>
+  <div class="ab" role="group" aria-label="Actions">
+    <button type="button" class="b" aria-label="B: cancel" (click)="buttonB()">B</button>
+    <button type="button" class="a" aria-label="A: accept or talk" (click)="buttonA()">A</button>
+  </div>
+  <!-- Game Boy body details: only shown in the upright-phone layout (app.scss) -->
+  <div class="console" aria-hidden="true"></div>
+  <div class="bezel-lines" aria-hidden="true">PIXEL ISLAND WITH STEREO SOUND</div>
+  <span class="led" aria-hidden="true"></span>
+  <p class="brand" aria-hidden="true"><span>Luis'</span> PORTFOLIO</p>
+  <div class="pills">
+    <button type="button" class="pill" [attr.aria-label]="soundOn() ? 'Select: sound off' : 'Select: sound on'"
+            [attr.aria-pressed]="soundOn()" (click)="toggleSound()">SELECT</button>
+    <button type="button" class="pill" aria-label="Start: classic view" (click)="classic.set(true)">START</button>
+  </div>
+  <div class="speaker" aria-hidden="true"></div>
+}
+
+<header [class.in-shell]="!classic()">
   <span class="chip name">LUIS PORTILLA's Portfolio</span>
-  <button type="button" class="chip" [attr.aria-expanded]="classic()" (click)="classic.set(!classic())">
-    {{ classic() ? 'ISLAND VIEW' : 'CLASSIC VIEW' }}
-  </button>
+  <span class="right">
+    <button type="button" class="chip" aria-label="Sound" [attr.aria-pressed]="soundOn()" [title]="soundOn() ? 'Sound on' : 'Sound off'" (click)="toggleSound()">
+      {{ soundOn() ? '🔊' : '🔇' }}
+    </button>
+    <button type="button" class="chip" [attr.aria-expanded]="classic()" (click)="classic.set(!classic())">
+      {{ classic() ? 'ISLAND VIEW' : 'CLASSIC VIEW' }}
+    </button>
+  </span>
 </header>

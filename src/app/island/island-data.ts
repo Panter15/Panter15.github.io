@@ -421,10 +421,10 @@ export const ISLAND = {
       "views": [
         {
           "src": "island/sprites/luis.png",
-          "dx": -15,
-          "dy": -47,
-          "w": 30,
-          "h": 48
+          "dx": -10,
+          "dy": -27,
+          "w": 20,
+          "h": 28
         }
       ]
     }
