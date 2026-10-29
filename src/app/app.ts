@@ -23,12 +23,14 @@ export class App {
     if (this.sound.playing) this.sound.stop();
     else this.sound.start();
     this.soundOn.set(this.sound.playing);
+    if (this.sound.playing) this.island().emote('music');
   }
 
   protected open(): void {
     const l = this.selected();
     if (l) window.open(l.url, '_blank', 'noopener');
     this.close();
+    this.island().emote('happy');
   }
 
   // ---- Game Boy controls: D-pad walks Luis (or moves ▶ in the dialog), A = accept / talk, B = cancel
@@ -45,6 +47,5 @@ export class App {
 
   protected close(): void {
     this.selected.set(null);
-    this.island().zoomOut();
   }
 }

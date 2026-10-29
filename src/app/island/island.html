@@ -1,49 +1,54 @@
-<div class="scene" aria-label="Luis's island. Walk with the arrow keys or the on-screen arrows, or select a building.">
-  <div class="world terrain-world" [style.transform]="worldTransform()">
-    <div class="open-sea" aria-hidden="true"
-         [style.left.px]="ground.centerX * scale() - seaRadius()" [style.top.px]="ground.centerY * scale() - seaRadius()"
-         [style.width.px]="seaRadius() * 2" [style.height.px]="seaRadius() * 2"></div>
-    <img class="ground" [src]="ground.src" alt="" (click)="walkTo($event)"
-         [style.width.px]="ground.w * scale()" [style.height.px]="ground.h * scale()" draggable="false">
-  </div>
+<div class="scene" aria-label="Luis's town. Walk with the arrow keys or the on-screen arrows, or select a place.">
+  <div class="map" [style.transform]="mapTransform()">
+    <img class="ground" src="town/ground.png" alt="" draggable="false" (click)="walkTo($event)"
+         [style.width.px]="town.w * scale()" [style.height.px]="town.h * scale()">
 
-  <!-- Luis walks in this layer while he is behind La Malinche, so the mountain is drawn over him -->
-  <div class="world behind-world" [style.transform]="worldTransform()" [style.--tilt]="tilt + 'deg'">
-    @if (luis().behind) { <ng-container *ngTemplateOutlet="luisTpl" /> }
-  </div>
-
-  <div class="world mountain-world" [style.transform]="mountainTransform()" [style.--tilt]="tilt + 'deg'">
-    @if (mountain(); as m) {
-      <img class="mountain-sprite" [src]="m.src" alt="" draggable="false"
-           [style.left.px]="m.left" [style.top.px]="m.top" [style.width.px]="m.w" [style.height.px]="m.h"
-           [style.transform-origin]="m.origin">
+    @for (h of hits; track h.id) {
+      <button type="button" class="landmark" [attr.aria-label]="h.landmark.name + ': ' + h.landmark.place" (click)="pick(h.landmark)"
+              [style.left.px]="h.x * scale()" [style.top.px]="h.y * scale()" [style.width.px]="h.w * scale()" [style.height.px]="h.h * scale()">
+        <span class="tag">{{ h.landmark.name }}</span>
+      </button>
     }
-  </div>
+    <button type="button" class="landmark boat-link" [attr.aria-label]="boat.landmark.name + ': ' + boat.landmark.place" (click)="pick(boat.landmark)"
+            [style.left.px]="boat.x * scale()" [style.top.px]="boat.y * scale()" [style.width.px]="boat.w * scale()" [style.height.px]="boat.h * scale()">
+      <div class="boat-sprite" [style.background-image]="'url(' + boat.src + ')'" [style.--frames]="boat.frames"></div>
+      <span class="tag">{{ boat.landmark.name }}</span>
+    </button>
 
-  <div class="world objects-world" [style.transform]="worldTransform()" [style.--tilt]="tilt + 'deg'">
-    @for (s of sprites(); track s.id) {
-      @if (s.landmark; as l) {
-        <button type="button" class="billboard landmark" [class.boat-link]="s.id === 'boat'"
-                [style.left.px]="s.left" [style.top.px]="s.top" [style.width.px]="s.w" [style.height.px]="s.h" [style.transform-origin]="s.origin"
-                [attr.aria-label]="l.name + ': ' + l.place" (click)="pick(s)">
-          <img [src]="s.src" alt="" draggable="false">
-          <span class="tag">{{ l.name }}</span>
-        </button>
-      } @else {
-        <img class="billboard" [src]="s.src" alt="" draggable="false"
-             [style.left.px]="s.left" [style.top.px]="s.top" [style.width.px]="s.w" [style.height.px]="s.h" [style.transform-origin]="s.origin">
-      }
+    <!-- animated life: flowers and grass sway, animals idle, fish swim, the waterfall and ripples move -->
+    @for (d of decor; track $index) {
+      <div [class]="'decor ' + d.kind" aria-hidden="true"
+           [style.left.px]="d.x * scale()" [style.top.px]="d.y * scale()" [style.width.px]="d.w * scale()" [style.height.px]="d.h * scale()"
+           [style.background-image]="'url(' + d.src + ')'" [style.--frames]="d.frames" [style.--w]="d.w * scale() + 'px'"
+           [style.--dist]="(d.dist ?? 0) * scale() + 'px'" [style.animation-duration.ms]="d.ms" [style.animation-delay.ms]="d.delay"></div>
     }
-    @if (!luis().behind) { <ng-container *ngTemplateOutlet="luisTpl" /> }
+
+    <!-- animals walking about -->
+    @for (c of critters(); track $index) {
+      <!-- walking: the horse switches to its gallop frames; the others trot (faster frames + a little bounce) -->
+      @let galloping = c.moving && c.run;
+      <div class="decor frames critter" [class.flip]="c.flip" [class.trot]="c.moving && !c.run" aria-hidden="true"
+           [style.left.px]="(c.fx - c.w / 2) * scale()" [style.top.px]="(c.fy - c.h + 1) * scale()" [style.width.px]="c.w * scale()" [style.height.px]="c.h * scale()"
+           [style.background-image]="'url(' + (galloping ? c.run : c.src) + ')'" [style.--frames]="galloping ? c.runFrames : c.frames" [style.--w]="c.w * scale() + 'px'"
+           [style.--ms]="(c.moving ? (galloping ? 420 : 320) : c.ms) + 'ms'" [style.animation-delay.ms]="c.delay"></div>
+    }
+
+    @let me = luis();
+    <div class="luis-shadow" [style.left.px]="me.x" [style.top.px]="me.y"
+         [style.width.px]="14 * scale()" [style.height.px]="4 * scale()"></div>
+    <!-- the floreo: the spinning reata's far half goes behind Luis, the near half in front -->
+    @if (me.lasso; as l) {
+      <img class="luis" [src]="l.back" alt="" [style.left.px]="l.left" [style.top.px]="l.top" [style.width.px]="l.w" [style.height.px]="l.h">
+    }
+    <img class="luis" [class.flip]="me.flip" [src]="me.src" alt="Luis" draggable="false"
+         [style.left.px]="me.left" [style.top.px]="me.top" [style.width.px]="me.w" [style.height.px]="me.h">
+    @if (me.lasso; as l) {
+      <img class="luis" [src]="l.front" alt="" [style.left.px]="l.left" [style.top.px]="l.top" [style.width.px]="l.w" [style.height.px]="l.h">
+    }
+    @if (bubble(); as b) {
+      <img class="luis bubble" [src]="b" alt="" [style.left.px]="me.bubble.left" [style.top.px]="me.bubble.top" [style.width.px]="me.bubble.w" [style.height.px]="me.bubble.h">
+    }
   </div>
 </div>
 
-<ng-template #luisTpl>
-  @let me = luis();
-  <div class="luis-shadow" [style.left.px]="me.x" [style.top.px]="me.y"
-       [style.width.px]="12 * scale()" [style.height.px]="4 * scale()"></div>
-  <img class="billboard" [class.flip]="me.flip" [src]="me.src" alt="Luis" draggable="false"
-       [style.left.px]="me.left" [style.top.px]="me.top" [style.width.px]="me.w" [style.height.px]="me.h" [style.transform-origin]="me.origin">
-</ng-template>
-
-<p class="hint" [class.gone]="hintGone()" aria-hidden="true">WALK TO AN OBJECT</p>
+<p class="hint" [class.gone]="hintGone() || !introDone()" aria-live="polite">MOVE AROUND AND VISIT A PLACE</p>
