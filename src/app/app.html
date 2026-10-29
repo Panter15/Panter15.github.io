@@ -25,7 +25,20 @@
   <div class="console" aria-hidden="true"></div>
   <div class="bezel-lines" aria-hidden="true">PIXEL ISLAND WITH STEREO SOUND</div>
   <span class="led" aria-hidden="true"></span>
-  <p class="brand" aria-hidden="true"><span>Luis'</span> PORTFOLIO</p>
+  <p class="brand">
+    <b aria-hidden="true"><span>Luis'</span> PORTFOLIO</b>
+    <button type="button" class="sound" [attr.aria-label]="soundOn() ? 'Sound off' : 'Sound on'"
+            [attr.aria-pressed]="soundOn()" (click)="toggleSound()">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor" />
+        @if (soundOn()) {
+          <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+        } @else {
+          <path d="M16 9l6 6M22 9l-6 6" />
+        }
+      </svg>
+    </button>
+  </p>
   <div class="pills">
     <button type="button" class="pill" [attr.aria-label]="soundOn() ? 'Select: sound off' : 'Select: sound on'"
             [attr.aria-pressed]="soundOn()" (click)="toggleSound()">SELECT</button>

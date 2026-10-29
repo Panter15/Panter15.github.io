@@ -1,20 +1,22 @@
-// Sea waves + an original 8-bit loop, synthesized with Web Audio (no audio files).
-const BPM = 112;
-const STEP = 60 / BPM / 2; // one eighth note, in seconds
+// Sea waves + the island waltz in Game Boy style, synthesized with Web Audio (no audio files).
+import { END_ROW, INTRO_ROWS, NOTES, ROW } from './song';
 
-// One string per bar, 8 eighth notes each; '-' is a rest. Chords: C Am F G, twice.
-const LEAD = [
-  'E5 G5 C6 G5 E5 - G5 -', 'A5 - G5 E5 C5 - E5 -', 'F5 A5 C6 A5 G5 F5 E5 -', 'D5 - G5 - B4 D5 G4 -',
-  'E5 G5 C6 G5 E5 - G5 A5', 'C6 - B5 A5 E5 - A5 -', 'F5 - A5 G5 F5 E5 D5 -', 'D5 E5 F5 D5 C5 - - -',
-].join(' ').split(' ');
-const BASS = ['C3', 'A2', 'F2', 'G2', 'C3', 'A2', 'F2', 'G2'];
-const LOOP = LEAD.length * STEP;
+const WAVE = 8.5; // seconds between surf swells
+
+// instrument -> [oscillator, volume, fade in seconds]; fades match the GB "Down" envelope (15 steps of length/64 s)
+const VOICES: [OscillatorType, number, number][] = [
+  ['square', 0.07, 0.7], // melody
+  ['square', 0.045, 0.94], // held notes
+  ['square', 0.045, 0.47], // picked notes
+  ['sine', 0.2, 0], // bass: holds until the next note
+];
 
 const SEMITONES: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
-/** 'A4' -> 440 Hz */
+/** 'A4' -> 440 Hz, 'C#5' -> 554.37 Hz */
 export function freq(note: string): number {
-  const midi = 12 * (Number(note[1]) + 1) + SEMITONES[note[0]];
+  const sharp = note[1] === '#' ? 1 : 0;
+  const midi = 12 * (Number(note[1 + sharp]) + 1) + SEMITONES[note[0]] + sharp;
   return 440 * 2 ** ((midi - 69) / 12);
 }
 
@@ -46,39 +48,39 @@ export class Sound {
     noise.connect(foam).connect(surf).connect(out);
     noise.start();
 
-    const note = (type: OscillatorType, name: string, t: number, len: number, vol: number) => {
+    const note = (name: string, t: number, len: number, voice: number) => {
+      const [type, vol, fade] = VOICES[voice];
+      const end = t + (fade ? Math.min(fade, len) : len);
       const o = ctx.createOscillator();
       o.type = type;
       o.frequency.value = freq(name);
       const g = ctx.createGain();
       g.gain.setValueAtTime(vol, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + len);
+      if (!fade) g.gain.setValueAtTime(vol, end - 0.02); // bass holds, then a short release to avoid clicks
+      g.gain.linearRampToValueAtTime(0, end);
       o.connect(g).connect(out);
       o.start(t);
-      o.stop(t + len);
+      o.stop(end);
     };
 
-    const loop = (t: number) => {
-      for (const [at, peak] of [[0, 0.5], [LOOP / 2, 0.35]]) {
-        const s = t + at;
+    // Plays from `fromRow` to the end; the first pass includes the intro, later passes start after it.
+    const loop = (t: number, fromRow: number) => {
+      const length = (END_ROW - fromRow) * ROW;
+      for (let s = t, k = 0; s < t + length; s += WAVE, k++) {
         surf.gain.setValueAtTime(0.03, s);
-        surf.gain.linearRampToValueAtTime(peak, s + 1.4);
-        surf.gain.exponentialRampToValueAtTime(0.03, s + LOOP / 2 - 0.1);
+        surf.gain.linearRampToValueAtTime(k % 2 ? 0.35 : 0.5, s + 1.4);
+        surf.gain.exponentialRampToValueAtTime(0.03, s + WAVE - 0.1);
         foam.frequency.setValueAtTime(300, s);
         foam.frequency.linearRampToValueAtTime(1600, s + 1.4);
         foam.frequency.exponentialRampToValueAtTime(300, s + 6);
       }
-      LEAD.forEach((n, i) => n !== '-' && note('square', n, t + i * STEP, STEP * 0.9, 0.06));
-      BASS.forEach((n, bar) => {
-        for (let i = 0; i < 8; i++) {
-          const octaveUp = n[0] + (Number(n[1]) + (i % 2));
-          note('triangle', octaveUp, t + (bar * 8 + i) * STEP, STEP * 0.8, 0.18);
-        }
-      });
-      // Schedule the next loop shortly before this one ends.
-      this.timer = window.setTimeout(() => loop(t + LOOP), (t + LOOP - ctx.currentTime - 0.5) * 1000);
+      for (const [row, name, rows, voice] of NOTES) {
+        if (row >= fromRow) note(name, t + (row - fromRow) * ROW, rows * ROW, voice);
+      }
+      // Schedule the next pass shortly before this one ends.
+      this.timer = window.setTimeout(() => loop(t + length, INTRO_ROWS), (t + length - ctx.currentTime - 0.5) * 1000);
     };
-    loop(ctx.currentTime + 0.1);
+    loop(ctx.currentTime + 0.1, 0);
   }
 
   stop(): void {
