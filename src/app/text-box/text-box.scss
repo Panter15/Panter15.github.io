@@ -16,3 +16,9 @@ p { margin: 0; font-size: 12px; line-height: 1.8; min-height: 3.6em; }
     &[aria-selected="true"]::before { content: '▶'; position: absolute; left: 0; }
   }
 }
+
+// below ~960px the box would cover the Game Boy controls in the corners, so lift it above them
+@media (max-width: 960px) { .box { bottom: 170px; } }
+
+// Game Boy shell on upright phones: the box shows inside the screen (the screen's inner bottom edge is 50vh - 18px from the bottom, + 10px gap)
+@media (max-width: 600px) and (orientation: portrait) { .box { bottom: calc(50vh - 8px); width: calc(100% - 64px); } }

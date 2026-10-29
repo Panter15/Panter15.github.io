@@ -7,3 +7,133 @@ header {
   background: var(--paper); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
 }
 button.chip { cursor: pointer; }
+.right { display: flex; gap: 12px; }
+
+@media (max-width: 520px) {
+  header, .right { gap: 6px; }
+  header { top: 8px; left: 8px; right: 8px; }
+  .chip { padding: 6px 7px; font-size: 9px; border-width: 2px; box-shadow: 2px 2px 0 var(--ink); }
+}
+
+// Game Boy controls: D-pad always bottom-left, A/B bottom-right (B low-left, A high-right), styled after the
+// original Game Boy: charcoal cross, maroon-magenta buttons, navy A/B printed under them.
+// See-through so they don't fight with the island's colours.
+.dpad, .ab {
+  position: fixed; z-index: 3; bottom: 20px; opacity: .6; transition: opacity .2s;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .3));
+  &:hover, &:focus-within, &:active { opacity: .95; }
+}
+.dpad button, .ab button { font: inherit; border: 0; padding: 0; cursor: pointer; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.dpad button:focus-visible, .ab button:focus-visible { outline: 3px dashed var(--paper); outline-offset: 2px; }
+
+// one charcoal cross with faint embossed arrows (CSS triangles: font arrows sit on different baselines) and a dimple
+.dpad {
+  left: 20px; display: grid; grid-template: repeat(3, 42px) / repeat(3, 42px);
+  button, .center { background: #2c2c34; }
+  button {
+    display: grid; place-items: center; color: #4a4a56; &:active { background: #1f1f25; }
+    &::before { content: ''; width: 10px; height: 10px; background: currentColor; }
+  }
+  .up { grid-area: 1 / 2; border-radius: 5px 5px 0 0; &::before { clip-path: polygon(50% 15%, 100% 85%, 0 85%); } }
+  .down { grid-area: 3 / 2; border-radius: 0 0 5px 5px; &::before { clip-path: polygon(0 15%, 100% 15%, 50% 85%); } }
+  .left { grid-area: 2 / 1; border-radius: 5px 0 0 5px; &::before { clip-path: polygon(15% 50%, 85% 0, 85% 100%); } }
+  .right { grid-area: 2 / 3; border-radius: 0 5px 5px 0; &::before { clip-path: polygon(85% 50%, 15% 0, 15% 100%); } }
+  .center { grid-area: 2 / 2; display: grid; place-items: center; }
+  .center::after { content: ''; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #1f1f25, #34343d); }
+}
+
+// two maroon-magenta buttons, A raised for the Game Boy slant, letters printed under them
+.ab {
+  right: 24px; bottom: 30px; display: flex; gap: 14px; align-items: flex-end;
+  button {
+    position: relative; width: 50px; height: 50px; border-radius: 50%; color: transparent;
+    background: radial-gradient(circle at 40% 35%, #c2457a, #8e2352); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25);
+    &::after {
+      position: absolute; left: 0; right: 0; top: calc(100% + 5px); text-align: center;
+      font-size: 12px; color: #2b2f7a; text-shadow: 0 0 3px rgba(255, 255, 255, .8);
+    }
+    &:active { background: #7c1d47; box-shadow: inset 0 2px 0 rgba(0, 0, 0, .3); }
+  }
+  .a { margin-bottom: 24px; &::after { content: 'A'; } }
+  .b::after { content: 'B'; }
+}
+.console, .speaker, .bezel-lines, .led, .brand, .pills { display: none; }
+
+// Phones held upright: the page becomes a Game Boy lying on a dark surface. The island is the screen, controls sit
+// on the grey body. The header's sound / classic buttons become SELECT / START, so the header hides (it returns in
+// the classic view). Layout: console inset 8px; screen frame from 40px down, 50vh tall (border-box).
+@media (max-width: 600px) and (orientation: portrait) {
+  :host { position: fixed; inset: 0; background: radial-gradient(circle at 30% 20%, #3a342e, #1e1b18); }
+  header.in-shell { display: none; }
+
+  // the grey slab: rounded corners, big bottom-right curve, faint plastic grain, groove under the top edge, PHONES tab
+  .console {
+    display: block; position: fixed; z-index: -1; inset: 8px; border-radius: 10px 10px 72px 10px;
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.09'/></svg>"),
+      linear-gradient(#e2e0da, #cfccc4);
+    box-shadow: inset -3px -4px 0 rgba(0, 0, 0, .1), inset 2px 2px 0 rgba(255, 255, 255, .6), 0 6px 18px rgba(0, 0, 0, .5);
+    &::before {   // the groove across the top
+      content: ''; position: absolute; left: 0; right: 0; top: 18px; height: 2px;
+      background: rgba(0, 0, 0, .14); box-shadow: 0 1px 0 rgba(255, 255, 255, .7);
+    }
+    &::after {    // the headphone tab at the bottom
+      content: 'PHONES'; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+      padding: 3px 12px 2px; font: 700 6px/1 Arial, sans-serif; letter-spacing: 1px; color: #8a877f;
+      border: 1px solid rgba(0, 0, 0, .15); border-bottom: 0; border-radius: 8px 8px 0 0;
+    }
+  }
+
+  // the screen frame: wider on the left (power light) and at the top (print), big bottom-right curve
+  app-island {
+    top: 40px; left: 18px; right: 18px; bottom: auto; height: 50vh;
+    border: solid #6a6876; border-width: 24px 12px 20px 28px; border-radius: 8px 8px 40px 8px; overflow: hidden;
+    box-shadow: inset 0 0 0 2px #3c3a46;
+  }
+  // coloured lines broken by small print, across the top of the frame
+  .bezel-lines {
+    display: flex; align-items: center; gap: 6px; position: fixed; z-index: 3; top: 47px; left: 34px; right: 28px;
+    font: 700 6px/1 Arial, sans-serif; letter-spacing: .6px; color: #d6d4de; white-space: nowrap;
+    &::before, &::after { content: ''; flex: 1; height: 5px; background: linear-gradient(#8e2352 0 2px, transparent 2px 3px, #2b2f7a 3px 5px); }
+  }
+  // red power light with its label
+  .led {
+    display: block; position: fixed; z-index: 3; left: 29px; top: calc(40px + 16vh); width: 7px; height: 7px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #ff6a5a, #b0201a); box-shadow: 0 0 6px #ff3a2a;
+    &::after {
+      content: 'BATTERY'; position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+      font: 700 5px/1 Arial, sans-serif; letter-spacing: .4px; color: #d6d4de;
+    }
+  }
+  // the name printed under the screen, like the brand print on the original
+  .brand {
+    display: block; position: fixed; top: calc(40px + 50vh + 14px); left: 30px; margin: 0;
+    font: italic 700 23px/1 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5px; color: #2b2f7a;
+    span { font: 700 14px/1 Arial, sans-serif; letter-spacing: 0; margin-right: 3px; }
+  }
+  // grey body runs from the screen frame down to the console's bottom edge (8px above the viewport's)
+  .dpad, .ab { opacity: 1; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .35)); }
+  .dpad { left: 26px; bottom: calc(25vh - 64px); }
+  .ab { right: 26px; bottom: calc(25vh - 50px); button::after { text-shadow: none; } }
+  // SELECT / START: two grey pills, tilted, names printed under them
+  .pills {
+    display: flex; gap: 22px; position: fixed; left: 50%; bottom: 48px; transform: translateX(-60%);
+    .pill {
+      position: relative; width: 46px; height: 13px; padding: 0; border: 0; border-radius: 7px; cursor: pointer;
+      font: italic 700 9px/1 Arial, sans-serif; letter-spacing: .5px; color: transparent;
+      background: linear-gradient(#a9a6b0, #85828e); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2); transform: rotate(-25deg);
+      &:active { background: #75727e; }
+      &:focus-visible { outline: 3px dashed #2b2f7a; outline-offset: 3px; }
+    }
+    .pill::before { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); color: #2b2f7a; }
+    .pill:first-child::before { content: 'SELECT'; }
+    .pill:last-child::before { content: 'START'; }
+  }
+  // six long dark slits following the bottom-right curve
+  .speaker {
+    display: block; position: fixed; right: 24px; bottom: 30px; width: 76px; height: 54px; transform: rotate(-30deg);
+    background: repeating-linear-gradient(90deg, #6f6c66 0 6px, transparent 6px 13px);
+    -webkit-mask: linear-gradient(#000, #000); border-radius: 6px;
+    box-shadow: inset 0 2px 2px rgba(0, 0, 0, .3);
+  }
+}

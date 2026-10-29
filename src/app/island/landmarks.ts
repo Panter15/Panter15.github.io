@@ -1,4 +1,4 @@
-// Places that link somewhere. `id` matches a sprite id in island-data.ts.
+// Places that link somewhere. `id` matches a place id in town-data.ts (made by art/town.js).
 export interface Landmark {
   id: string;
   name: string;
@@ -11,7 +11,7 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'visa',
     name: 'EASYTRAVEL VISA',
-    place: 'the visa office',
+    place: 'the consulate',
     about: 'Full stack platform for a visa-advisory agency (Angular, Spring Boot, PostgreSQL).',
     url: 'https://panter15.github.io/visa-agency-fe/',
   },
@@ -32,7 +32,7 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'boat',
     name: 'DANZA FOLCLOR',
-    place: 'the boat',
+    place: 'the chiva boat',
     about: 'Bilingual animated site for a Colombian folk dance group (Next.js, GSAP).',
     url: 'https://panter15.github.io/danza-folclor/',
   },

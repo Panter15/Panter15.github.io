@@ -1,39 +1,14 @@
 :host { display: block; position: fixed; inset: 0; }
 
-.scene {
-  position: absolute; inset: 0; overflow: hidden; user-select: none;
-  perspective: 900px; perspective-origin: 50% 30%;
-  background: linear-gradient(#5aa8ec, #b8e2ff 60%);   // sky; the round sea covers it below the horizon
-}
+.scene { position: absolute; inset: 0; overflow: hidden; user-select: none; background: #2c78d4; }
+.map { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 
-.world {
-  position: absolute; left: 50%; top: 62%; width: 0; height: 0;
-  transform-origin: 0 0; transform-style: preserve-3d;
-}
+img { display: block; image-rendering: pixelated; -webkit-user-drag: none; }
+.ground { position: absolute; left: 0; top: 0; }
 
-.terrain-world { z-index: 0; }
-.mountain-world { z-index: 1; }
-.objects-world { z-index: 2; }
-
-img { image-rendering: pixelated; -webkit-user-drag: none; }
-.ground { position: absolute; left: 0; top: 0; display: block; }
-// a round sea under the ground image, with its far edge drawing a curved horizon against the sky
-.open-sea { position: absolute; border-radius: 50%; background: #1c4890; }
-
-// Sprites keep facing the camera; multi-view sprites swap to the profile for the current island angle.
-.billboard {
-  position: absolute; display: block;   // transform-origin = the ground anchor, set per sprite
-  transform: rotateX(calc(-1 * var(--tilt)));
-}
-
-.mountain-sprite {
-  position: absolute; display: block;
-  transform: rotateX(calc(-1 * var(--tilt)));
-}
-
+// invisible click areas over each place; the name shows on hover / keyboard focus
 .landmark {
-  padding: 0; border: 0; background: none; cursor: pointer;
-  img { width: 100%; height: 100%; display: block; }
+  position: absolute; padding: 0; border: 0; background: none; cursor: pointer;
   .tag {
     position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -6px); white-space: nowrap;
     background: var(--paper); border: 3px solid var(--ink); padding: 6px 8px; font-size: 10px;
@@ -43,23 +18,61 @@ img { image-rendering: pixelated; -webkit-user-drag: none; }
   &:focus-visible { outline: 3px dashed var(--paper); outline-offset: 3px; }
   &.boat-link {
     .tag { font-size: 11px; }
-    img { transform-origin: 50% 100%; animation: boat-pulse 5s ease-in-out 1; }
+
   }
 }
 
-@keyframes boat-pulse {
-  0%, 100% { transform: scale(.92) translateY(0); }
-  50% { transform: scale(1.16) translateY(-2px); }
+// the chiva: water laps at the hull (sheet frames) while it rocks and bobs gently on the swell
+.boat-sprite {
+  width: 100%; height: 100%; image-rendering: pixelated; background-repeat: no-repeat;
+  background-size: calc(var(--frames) * 100%) 100%; transform-origin: 50% 85%;
+  animation: boat-frames .9s steps(var(--frames)) infinite, rock 4.2s ease-in-out infinite alternate;
 }
+@keyframes boat-frames { to { background-position-x: calc(var(--frames) / (var(--frames) - 1) * 100%); } }
+@keyframes rock { from { rotate: -1.6deg; translate: 0 0; } to { rotate: 1.6deg; translate: 0 1.5px; } }
+
+.luis { position: absolute; pointer-events: none; }
+.luis.flip { transform: scaleX(-1); }
+// emote bubble pops up over his head
+.bubble { animation: pop .18s steps(3) both; transform-origin: 50% 100%; }
+@keyframes pop { from { transform: scale(.4); } }
+// flat on the ground under Luis's feet, follows him
+.luis-shadow { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(0, 0, 0, .25); pointer-events: none; }
 
 .hint {
-  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); margin: 0; text-align: center;
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); margin: 0; text-align: center; white-space: nowrap;
   font-size: 11px; color: var(--paper); text-shadow: 2px 2px 0 var(--ink); pointer-events: none;
   animation: blink 1.2s steps(2) infinite; transition: opacity .4s;
   &.gone { opacity: 0; animation: none; }
 }
 @keyframes blink { 50% { opacity: .35; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .landmark.boat-link img { animation: none; }
+// ---- animated life (sprite sheets laid out as frames side by side) ----
+.decor {
+  position: absolute; pointer-events: none; image-rendering: pixelated; background-repeat: no-repeat;
+  background-size: calc(var(--frames) * var(--w)) 100%; animation-iteration-count: infinite;
 }
+// flowers and tall grass lean with the wind from their base (skew keeps the pixels crisp, unlike rotate)
+.decor.sway { transform-origin: 50% 100%; animation-name: sway; animation-timing-function: ease-in-out; animation-direction: alternate; }
+@keyframes sway { from { transform: skewX(-9deg); } to { transform: skewX(7deg); } }
+// sprite sheets: step through the frames
+.decor.frames { animation-name: frames; animation-timing-function: steps(var(--frames)); }
+@keyframes frames { to { background-position-x: calc(-1 * var(--frames) * var(--w)); } }
+.decor.flip { transform: scaleX(-1); }
+// roaming animals: frame speed from --ms; trotting adds a little bounce (the translate property, so it doesn't fight the flip)
+.decor.critter { animation-duration: var(--ms); }
+.decor.critter.trot { animation-name: frames, trot; animation-duration: var(--ms), .26s; animation-timing-function: steps(var(--frames)), ease-in-out; animation-direction: normal, alternate; }
+@keyframes trot { to { translate: 0 -2px; } }
+// fish: first frame of the sheet, swims out and back, turning round at each end (the sprite faces left)
+.decor.swim { background-size: calc(2 * var(--w)) 100%; animation-name: swim; animation-timing-function: linear; }
+@keyframes swim {
+  0% { transform: translateX(0) scaleX(-1); } 48% { transform: translateX(var(--dist)) scaleX(-1); }
+  50% { transform: translateX(var(--dist)) scaleX(1); } 98% { transform: translateX(0) scaleX(1); } 100% { transform: translateX(0) scaleX(-1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boat-sprite, .decor { animation: none; }
+}
+
+// Game Boy shell on upright phones (see app.scss): the hint sits at the bottom of the screen, on two lines
+@media (max-width: 600px) and (orientation: portrait) { .hint { bottom: calc(50vh - 8px); white-space: normal; width: 80%; font-size: 9px; line-height: 1.6; } }
