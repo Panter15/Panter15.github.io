@@ -1,4 +1,5 @@
 import { TOWN } from './town-data';
+import { LANDMARKS } from './landmarks';
 import { bumps, canStand, nearest, onLand, route } from './walk';
 
 describe('walk', () => {
@@ -28,6 +29,11 @@ describe('walk', () => {
     expect(bumps(luis, 106, 100, { x: 115, y: 100 })).toBeTrue();    // walking into him
     expect(bumps(luis, 112, 100, { x: 106, y: 100 })).toBeFalse();   // already overlapping, moving away
     expect(bumps(luis, 130, 100, { x: 135, y: 100 })).toBeFalse();   // nowhere near
+  });
+
+  it('every place on the map has a landmark (a missing one would break the page)', () => {
+    const ids = LANDMARKS.map(l => l.id);
+    for (const { id } of [...TOWN.hits, ...TOWN.spots, { id: 'boat' }]) expect(ids).withContext(id).toContain(id);
   });
 
   it('picks the closest spot in range, or none', () => {
