@@ -50,7 +50,7 @@ export class App {
   }
   protected release(dir: Dir): void { this.island().release(dir); }
   protected buttonA(): void { const box = this.textBox(); if (box) box.accept(); else this.island().interact(); }
-  protected buttonB(): void { if (this.selected()) this.close(); }
+  protected buttonB(): void { if (this.selected()) this.close(); else this.island().dismount(); }
 
   protected close(): void {
     this.selected.set(null);
