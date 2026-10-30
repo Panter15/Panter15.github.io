@@ -322,6 +322,21 @@ fs.writeFileSync(`${outDir}/luis_horse.png`, png(1, null, horseSheet));
 fs.writeFileSync(`${outDir}/luis_horse_run.png`, png(1, null, runSheet));
 fs.writeFileSync(`${outDir}/luis_horse_preview.png`, png(8, '#a8d8f8', Array.from({ length: HH }, (_, y) => [...horseSheet[y], null, null, ...runSheet[y]])));
 
+// Luis riding (40x46, facing left like the horse): his side view from the hat to the belt sits in the saddle, one
+// leg in navy trousers and a grey botín hangs down the flank. 2 standing frames (the horse's idle) + 4 galloping.
+const RW = HW, RH = HH + 16;
+function ride(horseGrid) {
+  const g = Array.from({ length: RH }, () => Array(RW).fill(null));
+  horseGrid.forEach((row, y) => row.forEach((c, x) => { if (c) g[y + 16][x] = c; }));
+  FRAMES.side_0.slice(0, 25).forEach((row, y) => row.forEach((c, x) => { if (c && x + 11 < RW) g[y][x + 11] = c; }));
+  for (let y = 25; y <= 33; y++) { g[y][19] = key.o; g[y][20] = y < 31 ? key.P : key.k; g[y][21] = y < 31 ? (y % 2 ? key.y : key.P) : key.k; g[y][22] = key.o; }
+  g[34][19] = g[34][20] = g[34][21] = g[34][22] = key.o; g[33][18] = key.o; g[33][19] = key.k;   // boot toe
+  return g;
+}
+[horse(0), horse(1)].forEach((h, n) => fs.writeFileSync(`${outDir}/luis_ride_idle_${n}.png`, png(1, null, ride(h))));
+runFrames.forEach((h, n) => fs.writeFileSync(`${outDir}/luis_ride_run_${n}.png`, png(1, null, ride(h))));
+fs.writeFileSync(`${outDir}/luis_ride_preview.png`, png(8, '#a8d8f8', Array.from({ length: RH }, (_, y) => [horse(0), ...runFrames].flatMap(h => [...ride(h)[y], null, null]))));
+
 for (const [name, g] of Object.entries(FRAMES)) fs.writeFileSync(`${outDir}/luis_${name}.png`, png(1, null, g));
 
 // one preview strip of the walk frames + blink, to eyeball the views side by side

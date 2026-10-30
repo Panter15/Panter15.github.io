@@ -35,7 +35,7 @@
 
     @let me = luis();
     <div class="luis-shadow" [style.left.px]="me.x" [style.top.px]="me.y"
-         [style.width.px]="14 * scale()" [style.height.px]="4 * scale()"></div>
+         [style.width.px]="(riding() ? 30 : 14) * scale()" [style.height.px]="4 * scale()"></div>
     <!-- the floreo: the spinning reata's far half goes behind Luis, the near half in front -->
     @if (me.lasso; as l) {
       <img class="luis" [src]="l.back" alt="" [style.left.px]="l.left" [style.top.px]="l.top" [style.width.px]="l.w" [style.height.px]="l.h">

@@ -392,7 +392,7 @@ for (const f of fs.readdirSync(ANIM)) if (f.endsWith('.png')) fs.copyFileSync(pa
 }
 fs.writeFileSync(path.join(__dirname, 'town_preview.png'), png(ground, 2));
 // Luis's frames (walk, blink, floreo) and his horse, from avatar.js
-for (const f of fs.readdirSync(__dirname)) if (/^luis_(down|up|side|lasso|horse)[a-z_0-9]*\.png$/.test(f) && !f.includes('preview'))
+for (const f of fs.readdirSync(__dirname)) if (/^luis_(down|up|side|lasso|horse|ride)[a-z_0-9]*\.png$/.test(f) && !f.includes('preview'))
   fs.copyFileSync(path.join(__dirname, f), path.join(pub, f.replace(/_/g, '-')));
 // if Luis has been redrawn in Piskel (art/luis.piskel, see luis-piskel.js), his frames come from there instead
 if (fs.existsSync(path.join(__dirname, 'luis.piskel'))) {

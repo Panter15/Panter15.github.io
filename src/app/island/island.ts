@@ -37,6 +37,11 @@ export class Island implements OnDestroy {
     ...d, fx: d.x + d.w / 2, fy: d.y + d.h - 1, hx: d.x + d.w / 2, hy: d.y + d.h - 1, path: [], wait: Math.random() * 3000, flip: false, moving: false,
   }));
   protected readonly critters = signal<readonly Critter[]>(this.herd);
+  // riding: A next to the horse mounts it; A with no place nearby, or B, gets off. The horse leaves the herd meanwhile.
+  protected readonly riding = signal(false);
+  private readonly horse = this.herd.find(c => c.run);   // the only animal with gallop frames
+  private side: 'left' | 'right' = 'left';               // riding has side frames only: keep the last left/right
+  private showHerd(): void { this.critters.set(this.herd.filter(c => !(this.riding() && c === this.horse))); }
 
   // ---- Luis ----------------------------------------------------------------------------------------------
   private readonly pos = signal({ x: TOWN.start.x as number, y: TOWN.start.y as number });
@@ -93,6 +98,11 @@ export class Island implements OnDestroy {
     // the side frames face left; walking right shows them mirrored
     // shortcut: mirroring moves the reata to his other hand; draw a right-facing set if that bothers anyone
     const view = d === 'left' || d === 'right' ? 'side' : d, frame = this.frame(), pass = frame === 3;
+    if (this.riding()) return {   // 40x46: Luis in the saddle, galloping while he moves
+      src: frame ? `town/luis-ride-run-${(frame - 1) % 4}.png` : `town/luis-ride-idle-${blink ? 1 : 0}.png`, flip: (d === 'left' || d === 'right' ? d : this.side) === 'right',
+      left: (x - 20) * s, top: (y - 45) * s, w: 40 * s, h: 46 * s, x: x * s, y: y * s, lasso: null,
+      bubble: { left: (x - 7) * s, top: (y - 60) * s, w: 14 * s, h: 13 * s },
+    };
     return {
       src: `town/luis-${view}-${frame === 0 && view === 'down' ? still : pass ? 0 : frame}.png`, flip: d === 'right',
       left: (x - 12) * s, top: (y - 33 - (pass ? 1 : 0)) * s, w: 24 * s, h: 34 * s, x: x * s, y: y * s,
@@ -110,7 +120,7 @@ export class Island implements OnDestroy {
 
   private standStill(t: number): void {
     const facingYou = this.facing() === 'down', still = t - this.movedAt;
-    const next = { blink: (t % 3400) < 140, mood: facingYou && still > 4000 && !this.locked() ? this.nextMood : 'none' as Mood, step: Math.floor(t / 110) };
+    const next = { blink: (t % 3400) < 140, mood: facingYou && still > 4000 && !this.locked() && !this.riding() ? this.nextMood : 'none' as Mood, step: Math.floor(t / 110) };
     const cur = this.idle();
     if (cur.blink !== next.blink || cur.mood !== next.mood || (next.mood !== 'none' && cur.step !== next.step)) this.idle.set(next);
   }
@@ -135,11 +145,29 @@ export class Island implements OnDestroy {
   interact(): void {
     const { x, y } = this.pos(), id = nearest(x, y, TOWN.spots);
     if (id) this.pick(landmark(id));
+    else if (this.riding()) this.dismount();
+    else if (this.horse && Math.hypot(this.horse.fx - x, this.horse.fy - y) < 30) this.mount();
+  }
+
+  private mount(): void {
+    const h = this.horse!;
+    this.pos.set({ x: h.fx, y: h.fy }); h.path = [];
+    this.side = h.flip ? 'right' : 'left'; this.facing.set(this.side);
+    this.riding.set(true); this.showHerd(); this.emote('happy');
+  }
+
+  /** The B button: get off the horse; it stands beside Luis and wanders off again after a while. */
+  dismount(): void {
+    if (!this.riding() || !this.horse) return;
+    const { x, y } = this.pos(), h = this.horse, beside = [x + 20, x - 20].find(hx => canStand(hx, y)) ?? x;
+    h.fx = beside; h.fy = y; h.path = []; h.wait = 2500; h.flip = this.side === 'right';
+    this.riding.set(false); this.showHerd();
   }
 
   @HostListener('window:keydown', ['$event'])
   protected onKeyDown(e: KeyboardEvent): void {
     const dir = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+    if ((e.key === ' ' || e.key.toLowerCase() === 'e') && !this.locked() && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); this.interact(); return; }   // keyboard A
     if (!dir || this.locked() || e.ctrlKey || e.metaKey || e.altKey) return;
     e.preventDefault(); this.press(dir);
   }
@@ -181,14 +209,16 @@ export class Island implements OnDestroy {
     if (!len) { this.frame.set(0); this.standStill(t); return; }
     if (this.idle().mood !== 'none') this.nextMood = MOODS[Math.floor(Math.random() * MOODS.length)];   // a new mood next time
     this.movedAt = t; if (this.idle().mood !== 'none' || this.idle().blink) this.idle.set({ blink: false, mood: 'none', step: 0 });
-    const step = Math.min(SPEED * dt, this.held.size ? Infinity : len);
+    const step = Math.min(SPEED * (this.riding() ? 2.2 : 1) * dt, this.held.size ? Infinity : len);
     let x = p.x + dx / len * step, y = p.y + dy / len * step;
     // slide along walls: if the move is blocked, try each axis on its own
-    const free = (ax: number, ay: number) => canStand(ax, ay) && !this.bumps(ax, ay, p, null);
+    const wide = (ax: number, ay: number) => !this.riding() || (canStand(ax - 12, ay) && canStand(ax + 12, ay));   // the horse is wider than Luis
+    const free = (ax: number, ay: number) => canStand(ax, ay) && wide(ax, ay) && !this.bumps(ax, ay, p, null);
     if (!free(x, y)) { if (free(x, p.y)) y = p.y; else if (free(p.x, y)) x = p.x; else { this.steps = []; this.frame.set(0); return; } }
     this.pos.set({ x, y });
     this.facing.set(Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down'));
-    this.frame.set([1, 3, 2, 3][Math.floor(t / STEP_MS) % 4]);   // step, pass, other step, pass
+    if (Math.abs(dx) > Math.abs(dy)) this.side = dx < 0 ? 'left' : 'right';
+    this.frame.set(this.riding() ? 1 + Math.floor(t / 90) % 4 : [1, 3, 2, 3][Math.floor(t / STEP_MS) % 4]);   // gallop, or step, pass, other step, pass
     const id = nearest(x, y, TOWN.spots);
     if (id && id !== this.near) {   // "!" over his head, then the place's box
       this.held.clear(); this.steps = []; this.frame.set(0); this.waiting = true;
@@ -199,14 +229,16 @@ export class Island implements OnDestroy {
 
   /** Would moving to (x, y) walk into Luis or an animal (other than `self`)? Moving away from one is always allowed. */
   private bumps(x: number, y: number, from: { x: number; y: number }, self: Critter | null): boolean {
-    const bodies = [...(self ? [{ x: this.pos().x, y: this.pos().y, r: 7 }] : []),
-      ...this.herd.filter(c => c !== self).map(c => ({ x: c.fx, y: c.fy, r: (c.w + (self ? self.w : 10)) / 2 - 6 }))];   // contact, not personal space
+    const me = this.riding() ? 36 : 10;   // Luis's width, on the horse or on foot
+    const bodies = [...(self ? [{ x: this.pos().x, y: this.pos().y, r: me / 2 + 2 }] : []),
+      ...this.herd.filter(c => c !== self && !(this.riding() && c === this.horse)).map(c => ({ x: c.fx, y: c.fy, r: (c.w + (self ? self.w : me)) / 2 - 6 }))];   // contact, not personal space
     return bumps(bodies, x, y, from);
   }
 
   private roam(dt: number): void {
     let changed = false;
     for (const c of this.herd) {
+      if (this.riding() && c === this.horse) continue;   // ridden: it goes where Luis goes
       if (c.moving) changed = true;   // stopping also needs a redraw (back to idle frames)
       c.moving = false;
       if (c.wait > 0) { c.wait -= dt * 1000; continue; }
@@ -226,7 +258,7 @@ export class Island implements OnDestroy {
       if (len <= step) { c.path.shift(); if (!c.path.length) c.wait = 1500 + Math.random() * 3500; }
       if (Math.abs(dx) > .5) c.flip = (dx < 0) === (c.right ?? true);   // face the way it walks
     }
-    if (changed) this.critters.set([...this.herd]);   // only redraw the page when an animal moved
+    if (changed) this.showHerd();   // only redraw the page when an animal moved
   }
 
   ngOnDestroy(): void { clearTimeout(this.bubbleTimer); cancelAnimationFrame(this.raf); this.resizer.disconnect(); }
