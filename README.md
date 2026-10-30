@@ -41,4 +41,7 @@ node art/avatar.js      # after changing Luis or the horse
 node art/town.js        # regenerate the island (run after avatar.js)
 ```
 
+`art/luis.piskel` wins over `avatar.js`: while it exists, `town.js` takes Luis's frames from it. To publish
+`avatar.js` changes, first run `node art/luis-piskel.js export` (this overwrites any hand edits in the Piskel file).
+
 Deployed to GitHub Pages by `.github/workflows/deploy.yml` on every push to `main`.

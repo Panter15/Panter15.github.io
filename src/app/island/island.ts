@@ -1,5 +1,4 @@
 import { Component, ElementRef, HostListener, NgZone, OnDestroy, computed, inject, input, output, signal } from '@angular/core';
-import { gsap } from 'gsap';
 import { LANDMARKS, Landmark } from './landmarks';
 import { TOWN } from './town-data';
 import { bumps, canStand, nearest, route } from './walk';
@@ -65,15 +64,17 @@ export class Island implements OnDestroy {
     return `translate(${Math.round(w / 2 - cx * s * z)}px, ${Math.round(h / 2 - cy * s * z)}px) scale(${z})`;
   });
   private readonly resizer = new ResizeObserver(() => this.box.set({ w: this.host.clientWidth, h: this.host.clientHeight }));
-  // the opening shot: a second on the whole town, then glide in to Luis
-  private readonly introState = { t: 0 };
-  private readonly introTween = gsap.to(this.introState, {
-    t: 1, delay: 1, duration: 2.2, ease: 'power2.inOut', onUpdate: () => this.intro.set(this.introState.t),
-  });
+  // the opening shot: a second on the whole town, then glide in to Luis (ease in-out over 2.2 s, run by tick())
+  private readonly introStart = performance.now() + 1000;
 
   constructor() {
     this.resizer.observe(this.host);
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) this.introTween.progress(1);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) this.intro.set(1);
+  }
+
+  private glide(t: number): void {
+    const k = Math.min(Math.max((t - this.introStart) / 2200, 0), 1);
+    this.intro.set(k < 0.5 ? 2 * k * k : 1 - (2 - 2 * k) ** 2 / 2);
   }
 
   // while he stands still: blinks now and then; after a few seconds facing you he picks a mood: the floreo (spins the
@@ -125,7 +126,7 @@ export class Island implements OnDestroy {
   /** Arrow keys / WASD and the on-screen arrows. */
   press(dir: Dir): void {
     if (this.locked()) return;
-    this.introTween.progress(1);   // skip the opening shot as soon as someone moves
+    this.intro.set(1);   // skip the opening shot as soon as someone moves
     this.held.add(dir); this.steps = []; this.hintGone.set(true);
   }
   release(dir: Dir): void { this.held.delete(dir); }
@@ -153,7 +154,7 @@ export class Island implements OnDestroy {
   /** Click / tap on the ground: walk there around trees and houses. offsetX/Y are in the ground image's px. */
   protected walkTo(e: MouseEvent): void {
     if (this.locked()) return;
-    this.introTween.progress(1);
+    this.intro.set(1);
     this.steps = route(this.pos(), { x: e.offsetX / this.scale(), y: e.offsetY / this.scale() }); this.hintGone.set(true);
   }
 
@@ -166,6 +167,7 @@ export class Island implements OnDestroy {
   private tick(t: number): void {
     const dt = Math.min(t - (this.last || t), 50) / 1000; this.last = t;
     this.raf = requestAnimationFrame(next => this.tick(next));
+    if (this.intro() < 1) this.glide(t);
     this.roam(dt);
     if (this.locked() || this.waiting) { this.held.clear(); this.steps = []; this.frame.set(0); this.standStill(t); return; }
     const p = this.pos();
@@ -227,5 +229,5 @@ export class Island implements OnDestroy {
     if (changed) this.critters.set([...this.herd]);   // only redraw the page when an animal moved
   }
 
-  ngOnDestroy(): void { clearTimeout(this.bubbleTimer); this.introTween.kill(); cancelAnimationFrame(this.raf); this.resizer.disconnect(); }
+  ngOnDestroy(): void { clearTimeout(this.bubbleTimer); cancelAnimationFrame(this.raf); this.resizer.disconnect(); }
 }

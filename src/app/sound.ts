@@ -78,7 +78,9 @@ export class Sound {
         if (row >= fromRow) note(name, t + (row - fromRow) * ROW, rows * ROW, voice);
       }
       // Schedule the next pass shortly before this one ends.
-      this.timer = window.setTimeout(() => loop(t + length, INTRO_ROWS), (t + length - ctx.currentTime - 0.5) * 1000);
+      // Hidden tabs can fire this timer late; never start the next pass in the past (notes would pile up).
+      this.timer = window.setTimeout(() => loop(Math.max(t + length, ctx.currentTime + 0.1), INTRO_ROWS),
+        (t + length - ctx.currentTime - 0.5) * 1000);
     };
     loop(ctx.currentTime + 0.1, 0);
   }
