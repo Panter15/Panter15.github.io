@@ -27,9 +27,9 @@
     @for (c of critters(); track $index) {
       <!-- walking: the horse switches to its gallop frames; the others trot (faster frames + a little bounce) -->
       @let galloping = c.moving && c.run;
-      <div class="decor frames critter" [class.flip]="c.flip" [class.trot]="c.moving && !c.run" aria-hidden="true"
+      <div class="decor frames critter" [class.flip]="c.flip && !(galloping && c.gallop !== c.run)" [class.trot]="c.moving && !c.run" aria-hidden="true"
            [style.left.px]="(c.fx - c.w / 2) * scale()" [style.top.px]="(c.fy - c.h + 1) * scale()" [style.width.px]="c.w * scale()" [style.height.px]="c.h * scale()"
-           [style.background-image]="'url(' + (galloping ? c.run : c.src) + ')'" [style.--frames]="galloping ? c.runFrames : c.frames" [style.--w]="c.w * scale() + 'px'"
+           [style.background-image]="'url(' + (galloping ? (c.gallop ?? c.run) : c.src) + ')'" [style.--frames]="galloping ? c.runFrames : c.frames" [style.--w]="c.w * scale() + 'px'"
            [style.--ms]="(c.moving ? (galloping ? 420 : 320) : c.ms) + 'ms'" [style.animation-delay.ms]="c.delay"></div>
     }
 

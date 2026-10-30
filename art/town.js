@@ -323,7 +323,7 @@ animal('monkey.png', 24, 14, 16, 2, 6, 30); animal('frog.png', 25, 18, 16, 2, 3,
 animal('chicken-brown.png', 40, 33, 16, 2, 4, 16); animal('chicken-white.png', 42, 32, 16, 2, 4, 16); animal('donkey.png', 34, 33, 23, 2, 6, 14);
 animal('dog.png', 27, 31, 16, 2, 10, 34); animal('cat.png', 17, 20, 16, 2, 6, 24);
 animal('luis-horse.png', HORSE[0] + 1, HORSE[1], 40, 2, 99, 62, false, 30);   // the horse gallops all over the island
-Object.assign(DECOR.at(-1), { run: 'town/luis-horse-run.png', runFrames: 4 });   // with its own gallop frames
+Object.assign(DECOR.at(-1), { run: 'town/luis-horse-run.png', runFrames: 4, runUp: 'town/luis-horse-back.png', runDown: 'town/luis-horse-front.png' });   // its own gallop frames: side, going away, coming towards you
 for (const [src, sw, sh, tx, ty] of [['dog-white', 32, 16, 20, 24], ['dog-black', 36, 17, 40, 24], ['dog-orange', 36, 16, 12, 33], ['dog-yellow', 42, 17, 47, 33],
   ['cat-black', 32, 16, 11, 21], ['cat-orange', 44, 17, 36, 21], ['cat-white', 34, 15, 25, 33], ['dog.png', 32, 16, 50, 23]])
   animal(src.endsWith('.png') ? src : `${src}.png`, tx, ty, sw / 2, 2, src.startsWith('cat') ? 6 : 9, src.startsWith('cat') ? 22 : 32, true, sh);

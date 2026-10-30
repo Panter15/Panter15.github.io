@@ -14,9 +14,9 @@ const KEYS: Record<string, Dir> = {
 const landmark = (id: string) => LANDMARKS.find(l => l.id === id)!;
 type Mood = 'none' | 'floreo' | 'sit' | 'phone';
 const MOODS: Mood[] = ['floreo', 'sit', 'phone'];
-interface Decor { src: string; x: number; y: number; w: number; h: number; kind: string; frames: number; ms: number; delay: number; dist?: number; roam?: number; speed?: number; right?: boolean; run?: string; runFrames?: number; }
+interface Decor { src: string; x: number; y: number; w: number; h: number; kind: string; frames: number; ms: number; delay: number; dist?: number; roam?: number; speed?: number; right?: boolean; run?: string; runFrames?: number; runUp?: string; runDown?: string; }
 /** An animal walking about: position = its feet (px), home = where it started, path = the route it's on. */
-interface Critter extends Decor { fx: number; fy: number; hx: number; hy: number; path: { x: number; y: number }[]; wait: number; flip: boolean; moving: boolean; }
+interface Critter extends Decor { fx: number; fy: number; hx: number; hy: number; path: { x: number; y: number }[]; wait: number; flip: boolean; moving: boolean; gallop?: string; }
 
 @Component({
   selector: 'app-island',
@@ -99,7 +99,10 @@ export class Island implements OnDestroy {
     // shortcut: mirroring moves the reata to his other hand; draw a right-facing set if that bothers anyone
     const view = d === 'left' || d === 'right' ? 'side' : d, frame = this.frame(), pass = frame === 3;
     if (this.riding()) return {   // 40x46: Luis in the saddle, galloping while he moves
-      src: frame ? `town/luis-ride-run-${(frame - 1) % 4}.png` : `town/luis-ride-idle-${blink ? 1 : 0}.png`, flip: (d === 'left' || d === 'right' ? d : this.side) === 'right',
+      // riding towards you: the horse's front; away: its back; left / right: the side view (mirrored for right)
+      src: d === 'down' || d === 'up' ? `town/luis-ride-${d === 'down' ? 'front' : 'back'}-${frame ? (frame - 1) % 4 : 1}.png`
+        : frame ? `town/luis-ride-run-${(frame - 1) % 4}.png` : `town/luis-ride-idle-${blink ? 1 : 0}.png`,
+      flip: (d === 'left' || d === 'right') && d === 'right',
       left: (x - 20) * s, top: (y - 45) * s, w: 40 * s, h: 46 * s, x: x * s, y: y * s, lasso: null,
       bubble: { left: (x - 7) * s, top: (y - 60) * s, w: 14 * s, h: 13 * s },
     };
@@ -257,6 +260,7 @@ export class Island implements OnDestroy {
       c.fx = nx; c.fy = ny; changed = true;
       if (len <= step) { c.path.shift(); if (!c.path.length) c.wait = 1500 + Math.random() * 3500; }
       if (Math.abs(dx) > .5) c.flip = (dx < 0) === (c.right ?? true);   // face the way it walks
+      c.gallop = Math.abs(dy) > Math.abs(dx) && c.runUp ? (dy < 0 ? c.runUp : c.runDown) : c.run;   // front / back / side frames
     }
     if (changed) this.showHerd();   // only redraw the page when an animal moved
   }

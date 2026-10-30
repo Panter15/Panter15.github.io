@@ -1153,7 +1153,9 @@ export const TOWN = {
       "right": false,
       "delay": -536,
       "run": "town/luis-horse-run.png",
-      "runFrames": 4
+      "runFrames": 4,
+      "runUp": "town/luis-horse-back.png",
+      "runDown": "town/luis-horse-front.png"
     },
     {
       "src": "town/dog-white.png",

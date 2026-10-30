@@ -335,6 +335,56 @@ function ride(horseGrid) {
 }
 [horse(0), horse(1)].forEach((h, n) => fs.writeFileSync(`${outDir}/luis_ride_idle_${n}.png`, png(1, null, ride(h))));
 runFrames.forEach((h, n) => fs.writeFileSync(`${outDir}/luis_ride_run_${n}.png`, png(1, null, ride(h))));
+
+// The horse seen from the front (coming towards you: long face with the white blaze, chest, front legs) and from the
+// back (going away: rump, swishing tail, hind legs), 40x30 like the side frames, 4 walk frames each: the legs take
+// turns lifting and the body bobs. Used for the horse alone and, with Luis on it, for riding up and down the island.
+function horseFB(view, step) {
+  const g = Array.from({ length: HH }, () => Array(HW).fill(null));
+  const set = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < HW && y < HH) g[y][x] = c; };
+  const blob = (cx, cy, rx, ry, c) => { for (let y = 0; y < HH; y++) for (let x = 0; x < HW; x++) if (((x + .5 - cx) / rx) ** 2 + ((y + .5 - cy) / ry) ** 2 <= 1) set(x, y, c); };
+  const H = '#b0582a', Hs = '#86421e', Hl = '#cf7a44', M = '#4a2412', Ml = '#6e3a1c', bl = '#f4efe2', v = '#3a2a20';
+  const bob = step % 2 ? 0 : 1, lift = [[2, 0], [0, 0], [0, 2], [0, 0]][step];   // left / right leg raised by
+  for (const [i, x] of [[0, 15], [1, 23]]) {   // legs and hooves
+    for (let y = 19 - bob; y < 27 - lift[i]; y++) { set(x, y, view === 'back' ? Hs : H); set(x + 1, y, Hs); }
+    for (let k = 0; k < 3; k++) set(x - (k === 0 ? 0 : 0) + k - 0.5, 27 - lift[i], v);
+  }
+  // red-and-white saddle blanket showing at both sides
+  for (let y = 9; y <= 11; y++) { set(10, y - bob, '#c8102e'); set(29, y - bob, '#c8102e'); set(11, y - bob, '#e8e0d0'); set(28, y - bob, '#e8e0d0'); }
+  if (view === 'front') {
+    blob(20, 16 - bob, 9, 6, H); blob(20, 18 - bob, 6, 3, Hs);                       // chest
+    // the face starts low enough that Luis's whole face shows above it when he rides towards you
+    blob(20, 11.5 - bob, 3.6, 5.6, H); blob(20, 15.5 - bob, 3, 2.2, Hl);             // long face, muzzle
+    for (let y = 7; y <= 15; y++) set(20, y - bob, bl);                             // white blaze
+    set(18, 9 - bob, v); set(22, 9 - bob, v); set(19, 17 - bob, v); set(21, 17 - bob, v);   // eyes, nostrils
+    set(17, 5 - bob, H); set(17, 6 - bob, H); set(23, 5 - bob, H); set(23, 6 - bob, H);   // ears
+    for (let x = 18; x <= 22; x++) set(x, 6 - bob, x % 2 ? M : Ml);                  // forelock
+    for (let k = 0; k <= 8; k++) { set(16 - k * .6, 10 + k * .4 - bob, k % 2 ? '#c8102e' : bl); set(24 + k * .6, 10 + k * .4 - bob, k % 2 ? '#c8102e' : bl); }   // reins
+  } else {
+    blob(20, 14 - bob, 9.5, 7, H); blob(16, 11 - bob, 3, 2, Hl); blob(20, 19 - bob, 7, 2.4, Hs);   // rump
+    for (let x = 14; x <= 26; x++) set(x, 7 - bob, '#5e2e14');                      // back of the saddle (cantle)
+    for (let j = 0; j < 13; j++) { const x = 20 + Math.sin(j / 2 + step) * 1.4; set(x, 9 + j - bob, j % 3 ? M : Ml); set(x + 1, 9 + j - bob, M); }   // tail
+  }
+  const out = g.map(r => r.slice());
+  for (let y = 0; y < HH; y++) for (let x = 0; x < HW; x++) if (!g[y][x] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => g[y + dy]?.[x + dx])) out[y][x] = C.out;
+  return out;
+}
+// riding up/down: Luis's front or back view (hat to belt) in the saddle, legs down both sides; the horse's head
+// (front) or rump (back) is closer to you, so it's drawn over his lower body
+function rideFB(view, step) {
+  const g = Array.from({ length: RH }, () => Array(RW).fill(null)), bob = step % 2 ? 0 : 1;
+  FRAMES[view === 'front' ? 'down_0' : 'up_0'].slice(0, 25).forEach((row, y) => row.forEach((c, x) => { if (c) g[y + bob][x + 8] = c; }));
+  for (const lx of [9, 29]) for (let y = 24; y <= 33; y++) { g[y][lx] = key.o; g[y][lx + 1] = y < 31 ? key.P : key.k; g[y][lx + 2] = key.o; }   // legs both sides
+  horseFB(view, step).forEach((row, y) => row.forEach((c, x) => { if (c) g[y + 16][x] = c; }));
+  return g;
+}
+for (const view of ['front', 'back']) {
+  const steps = [0, 1, 2, 3];
+  fs.writeFileSync(`${outDir}/luis_horse_${view}.png`, png(1, null, Array.from({ length: HH }, (_, y) => steps.flatMap(k => horseFB(view, k)[y]))));
+  steps.forEach(k => fs.writeFileSync(`${outDir}/luis_ride_${view}_${k}.png`, png(1, null, rideFB(view, k))));
+}
+fs.writeFileSync(`${outDir}/luis_ride_fb_preview.png`, png(8, '#a8d8f8', Array.from({ length: RH }, (_, y) =>
+  ['front', 'back'].flatMap(view => [0, 1, 2, 3].flatMap(k => [...rideFB(view, k)[y], null, null])))));
 fs.writeFileSync(`${outDir}/luis_ride_preview.png`, png(8, '#a8d8f8', Array.from({ length: RH }, (_, y) => [horse(0), ...runFrames].flatMap(h => [...ride(h)[y], null, null]))));
 
 for (const [name, g] of Object.entries(FRAMES)) fs.writeFileSync(`${outDir}/luis_${name}.png`, png(1, null, g));
