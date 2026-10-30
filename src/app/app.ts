@@ -17,7 +17,14 @@ export class App {
   private readonly island = viewChild.required(Island);
   private readonly textBox = viewChild(TextBox);
   private readonly sound = new Sound();
-  protected readonly soundOn = signal(false);
+  protected readonly soundOn = signal(true);
+
+  constructor() {
+    // Music is on from the start. Browsers only allow sound after the first tap / click / key press, so it begins
+    // there (capture phase, before any button: a first click on the sound button then turns it off, as it shows ON).
+    const begin = () => { if (this.soundOn() && !this.sound.playing) { this.sound.start(); this.island().emote('music'); } };
+    for (const type of ['pointerdown', 'keydown']) window.addEventListener(type, begin, { capture: true, once: true });
+  }
 
   protected toggleSound(): void {
     if (this.sound.playing) this.sound.stop();
